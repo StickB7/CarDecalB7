@@ -1,0 +1,54 @@
+name: secure_vault
+description: >
+  אפליקציית "תיקייה נעולה" - Secure Locked Folder Application.
+  Stores encrypted files locally with PIN/biometric authentication.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── State Management ─────────────────────────────────────────────────────────
+  provider: ^6.1.1
+
+  # ── Security & Encryption ────────────────────────────────────────────────────
+  flutter_secure_storage: ^9.0.0   # iOS Keychain / Android Keystore
+  encrypt: ^5.0.3                  # AES-256-CBC file encryption
+  crypto: ^3.0.3                   # PBKDF2-HMAC-SHA256 key derivation
+
+  # ── Biometric Authentication ──────────────────────────────────────────────────
+  local_auth: ^2.2.0               # Fingerprint / Face ID
+
+  # ── File Management ───────────────────────────────────────────────────────────
+  file_picker: ^6.2.1              # Native file picker
+  path_provider: ^2.1.2            # App private directory paths
+  path: ^1.9.0                     # Path manipulation utilities
+
+  # ── Local Database ───────────────────────────────────────────────────────────
+  sqflite: ^2.3.2                  # SQLite for file metadata
+
+  # ── Permissions ──────────────────────────────────────────────────────────────
+  permission_handler: ^11.3.1
+
+  # ── Utilities ────────────────────────────────────────────────────────────────
+  uuid: ^4.4.0                     # Unique IDs per stored file
+  mime: ^1.0.5                     # MIME-type detection
+  intl: ^0.19.0                    # Date formatting (Hebrew locale)
+
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
