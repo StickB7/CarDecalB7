@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>תיקייה נעולה</title>
+<style>
+  /* ── Reset & Base ─────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg:       #0D0D0F;
+    --surface:  #1A1A1F;
+    --surfVar:  #252530;
+    --border:   #2E2E3A;
+    --gold:     #D4AF37;
+    --goldDim:  #8A7224;
+    --text1:    #F0EFE9;
+    --text2:    #9190A0;
+    --text3:    #5C5B6A;
+    --success:  #4CAF82;
+    --error:    #CF6679;
+    --blue:     #4FC3F7;
+    --orange:   #FF8A65;
+    --green:    #81C784;
+  }
+  html, body {
+    height: 100%; width: 100%;
+    background: var(--bg);
+    font-family: -apple-system, 'Heebo', 'Arial Hebrew', Arial, sans-serif;
+    color: var(--text1);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Screen Container ─────────────────────────────────────────── */
+  #app {
+    height: 100dvh;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    opacity: 0;
+    transform: translateX(-30px);
+    pointer-events: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  .screen.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+  .screen.exit {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  /* ── Common Components ────────────────────────────────────────── */
+  .appbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    padding-top: calc(16px + env(safe-area-inset-top, 44px));
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .appbar-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 17px; font-weight: 600; color: var(--text1);
+  }
+  .appbar-actions { display: flex; align-items: center; gap: 4px; }
+  .icon-btn {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none; color: var(--text2);
+    font-size: 20px; border-radius: 50%; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .icon-btn:active { background: var(--surfVar); }
+
+  .gold-icon-box {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #D4AF37, #B8860B);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 4px 12px rgba(212,175,55,0.35);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+
+  .btn-primary {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, #D4AF37, #B8860B);
+    color: #1A1600; font-weight: 700; font-size: 16px;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    box-shadow: 0 4px 16px rgba(212,175,55,0.3);
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+
+  .btn-outline {
+    width: 100%; padding: 15px;
+    background: transparent;
+    color: var(--gold); font-size: 16px; font-weight: 600;
+    border: 1.5px solid var(--gold); border-radius: 14px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-outline:active { background: rgba(212,175,55,0.08); }
+
+  /* ── SCREEN 1: Splash ─────────────────────────────────────────── */
+  #screen-splash {
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .splash-icon {
+    width: 96px; height: 96px;
+    background: linear-gradient(135deg, #D4AF37, #B8860B);
+    border-radius: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+    box-shadow: 0 8px 40px rgba(212,175,55,0.45);
+    animation: splashPop 0.7s ease-out forwards;
+  }
+  @keyframes splashPop {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .splash-title {
+    margin-top: 28px;
+    font-size: 28px; font-weight: 700; letter-spacing: 1px;
+    animation: fadeUp 0.6s 0.3s ease-out both;
+  }
+  .splash-sub {
+    margin-top: 8px;
+    color: var(--text2); font-size: 14px;
+    animation: fadeUp 0.6s 0.5s ease-out both;
+  }
+  .splash-loader {
+    margin-top: 56px;
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite, fadeUp 0.6s 0.7s ease-out both;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCREEN 2: PIN Auth ───────────────────────────────────────── */
+  #screen-auth {
+    align-items: center;
+    padding-top: calc(env(safe-area-inset-top, 44px) + 60px);
+    padding-bottom: 30px;
+  }
+  .auth-icon-wrap {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #D4AF37, #B8860B);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+    box-shadow: 0 6px 28px rgba(212,175,55,0.4);
+  }
+  .auth-title { margin-top: 24px; font-size: 22px; font-weight: 700; }
+  .auth-sub   { margin-top: 6px;  color: var(--text2); font-size: 14px; }
+
+  /* PIN dots */
+  .pin-dots {
+    display: flex; gap: 16px; margin-top: 36px;
+  }
+  .dot {
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    transition: all 0.15s ease;
+  }
+  .dot.filled {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 10px rgba(212,175,55,0.5);
+    transform: scale(1.1);
+  }
+
+  .pin-error {
+    margin-top: 10px;
+    color: var(--error); font-size: 13px; text-align: center;
+    min-height: 20px;
+  }
+
+  /* Keypad */
+  .keypad {
+    margin-top: 32px;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+  }
+  .keypad-row {
+    display: flex; gap: 12px;
+  }
+  .key {
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 600; color: var(--text1);
+    cursor: pointer;
+    transition: background 0.08s, border-color 0.08s, transform 0.08s;
+    user-select: none; -webkit-user-select: none;
+  }
+  .key:active {
+    background: var(--surfVar);
+    border-color: rgba(212,175,55,0.4);
+    transform: scale(0.93);
+  }
+  .key.empty { background: transparent; border-color: transparent; cursor: default; }
+  .key.del   { font-size: 20px; color: var(--text2); }
+
+  .biometric-btn {
+    margin-top: 28px;
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: 1.5px solid var(--gold);
+    color: var(--gold); padding: 13px 28px;
+    border-radius: 14px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .biometric-btn:active { background: rgba(212,175,55,0.08); }
+
+  /* ── SCREEN 3: Vault Home ─────────────────────────────────────── */
+  #screen-vault { padding-bottom: 100px; }
+
+  /* Categories */
+  .categories {
+    display: flex; gap: 8px;
+    overflow-x: auto; padding: 12px 20px;
+    scrollbar-width: none; flex-shrink: 0;
+  }
+  .categories::-webkit-scrollbar { display: none; }
+  .cat-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 20px; white-space: nowrap;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 13px; font-weight: 600; color: var(--text2);
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+  }
+  .cat-chip.active {
+    background: var(--gold); color: #1A1600;
+    border-color: var(--gold);
+    box-shadow: 0 2px 10px rgba(212,175,55,0.3);
+  }
+  .cat-chip:active { opacity: 0.8; }
+
+  /* File count */
+  .file-count {
+    padding: 0 20px 8px;
+    font-size: 12px; color: var(--text3);
+  }
+
+  /* File list */
+  .file-list {
+    padding: 4px 20px 0;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .file-tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: border-color 0.15s, transform 0.1s;
+    active-opacity: 0.8;
+  }
+  .file-tile:active { border-color: var(--goldDim); transform: scale(0.98); }
+  .file-icon-box {
+    width: 48px; height: 48px; flex-shrink: 0;
+    background: var(--surfVar);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .file-info { flex: 1; min-width: 0; }
+  .file-name {
+    font-size: 15px; font-weight: 500; color: var(--text1);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .file-meta {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 3px; font-size: 12px; color: var(--text3);
+  }
+  .file-meta .dot-sep {
+    width: 3px; height: 3px; border-radius: 50%; background: var(--text3);
+  }
+  .file-more {
+    color: var(--text3); font-size: 20px;
+    padding: 4px; cursor: pointer;
+  }
+
+  /* FAB */
+  .fab {
+    position: fixed; bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #D4AF37, #B8860B);
+    color: #1A1600; font-weight: 700; font-size: 15px;
+    border: none; border-radius: 30px; padding: 15px 28px;
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; z-index: 100;
+    box-shadow: 0 6px 24px rgba(212,175,55,0.45);
+    transition: transform 0.1s, opacity 0.1s;
+  }
+  .fab:active { transform: translateX(-50%) scale(0.96); opacity: 0.9; }
+
+  /* ── SCREEN 4: Settings ───────────────────────────────────────── */
+  #screen-settings { }
+  .settings-section-title {
+    padding: 20px 20px 10px;
+    font-size: 12px; font-weight: 700; color: var(--gold);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .settings-list {
+    padding: 0 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .setting-tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .setting-tile:active { border-color: var(--goldDim); }
+  .setting-icon-box {
+    width: 40px; height: 40px; flex-shrink: 0;
+    background: var(--surfVar); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .setting-info { flex: 1; }
+  .setting-title { font-size: 15px; font-weight: 500; }
+  .setting-sub   { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .toggle {
+    width: 48px; height: 28px; background: var(--border);
+    border-radius: 14px; position: relative; cursor: pointer;
+    transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle.on { background: var(--gold); }
+  .toggle::after {
+    content: ''; position: absolute;
+    width: 22px; height: 22px; background: white; border-radius: 50%;
+    top: 3px; right: 3px; transition: right 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .toggle.on::after { right: calc(100% - 25px); }
+  .chevron { color: var(--text3); font-size: 16px; }
+  .setting-tile.danger .setting-title { color: var(--error); }
+  .setting-tile.danger .setting-icon-box { color: var(--error); }
+
+  /* ── SCREEN 5: File Viewer ────────────────────────────────────── */
+  #screen-viewer {
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .viewer-appbar {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 16px;
+    padding-top: calc(16px + env(safe-area-inset-top, 44px));
+    background: linear-gradient(to bottom, rgba(13,13,15,0.9), transparent);
+  }
+  .viewer-img {
+    width: 100%; height: 100%; object-fit: contain;
+  }
+  .viewer-placeholder {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 16px; padding: 40px;
+  }
+  .viewer-file-icon {
+    width: 80px; height: 80px;
+    background: var(--surfVar); border: 1px solid var(--border);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center; font-size: 40px;
+  }
+
+  /* ── Snackbar ─────────────────────────────────────────────────── */
+  #snackbar {
+    position: fixed; bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    left: 20px; right: 20px; z-index: 200;
+    background: var(--surfVar); color: var(--text1);
+    padding: 14px 18px; border-radius: 12px;
+    font-size: 14px; text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    transform: translateY(20px); opacity: 0;
+    transition: all 0.3s ease; pointer-events: none;
+  }
+  #snackbar.show { transform: translateY(0); opacity: 1; }
+
+  /* ── Bottom Nav hint ──────────────────────────────────────────── */
+  .nav-hint {
+    display: flex; justify-content: space-around;
+    padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    padding: 4px 16px; border-radius: 10px; transition: background 0.15s;
+    color: var(--text3);
+  }
+  .nav-item.active { color: var(--gold); }
+  .nav-item:active { background: var(--surfVar); }
+  .nav-icon { font-size: 22px; }
+
+  /* ── Lock overlay ─────────────────────────────────────────────── */
+  #lock-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  #lock-overlay.show { opacity: 1; pointer-events: all; }
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ SCREEN 1: Splash ══════════════════════════════════════════ -->
+  <div id="screen-splash" class="screen active">
+    <div class="splash-icon">🔐</div>
+    <div class="splash-title">תיקייה נעולה</div>
+    <div class="splash-sub">מוגן · פרטי · מאובטח</div>
+    <div class="splash-loader"></div>
+  </div>
+
+  <!-- ══ SCREEN 2: PIN Auth ════════════════════════════════════════ -->
+  <div id="screen-auth" class="screen">
+    <div class="auth-icon-wrap">🔒</div>
+    <div class="auth-title">תיקייה נעולה</div>
+    <div class="auth-sub">הכנס קוד PIN כדי לפתוח</div>
+
+    <div class="pin-dots" id="pin-dots">
+      <div class="dot" id="d0"></div>
+      <div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+      <div class="dot" id="d4"></div>
+      <div class="dot" id="d5"></div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+
+    <div class="keypad">
+      <div class="keypad-row">
+        <div class="key" onclick="pressKey('1')">1</div>
+        <div class="key" onclick="pressKey('2')">2</div>
+        <div class="key" onclick="pressKey('3')">3</div>
+      </div>
+      <div class="keypad-row">
+        <div class="key" onclick="pressKey('4')">4</div>
+        <div class="key" onclick="pressKey('5')">5</div>
+        <div class="key" onclick="pressKey('6')">6</div>
+      </div>
+      <div class="keypad-row">
+        <div class="key" onclick="pressKey('7')">7</div>
+        <div class="key" onclick="pressKey('8')">8</div>
+        <div class="key" onclick="pressKey('9')">9</div>
+      </div>
+      <div class="keypad-row">
+        <div class="key empty"></div>
+        <div class="key" onclick="pressKey('0')">0</div>
+        <div class="key del" onclick="pressDelete()">⌫</div>
+      </div>
+    </div>
+
+    <button class="biometric-btn" onclick="loginBiometric()">
+      <span>👆</span> כניסה ביומטרית
+    </button>
+  </div>
+
+  <!-- ══ SCREEN 3: Vault Home ══════════════════════════════════════ -->
+  <div id="screen-vault" class="screen">
+    <div class="appbar">
+      <div class="appbar-title">
+        <div class="gold-icon-box">🔐</div>
+        <span>תיקייה נעולה</span>
+      </div>
+      <div class="appbar-actions">
+        <button class="icon-btn" onclick="goTo('screen-settings')">⚙️</button>
+        <button class="icon-btn" onclick="lockVault()" style="color:var(--gold)">🔒</button>
+      </div>
+    </div>
+
+    <div class="categories" id="categories">
+      <div class="cat-chip active" onclick="filterCat('all',this)">⊞ הכל</div>
+      <div class="cat-chip" onclick="filterCat('images',this)">🖼 תמונות</div>
+      <div class="cat-chip" onclick="filterCat('videos',this)">🎬 סרטונים</div>
+      <div class="cat-chip" onclick="filterCat('documents',this)">📄 מסמכים</div>
+      <div class="cat-chip" onclick="filterCat('others',this)">📁 אחרים</div>
+    </div>
+
+    <div class="file-count" id="file-count">5 קבצים</div>
+
+    <div class="file-list" id="file-list">
+      <div class="file-tile" onclick="openFile('img1')" data-cat="images">
+        <div class="file-icon-box" style="color:var(--blue)">🖼️</div>
+        <div class="file-info">
+          <div class="file-name">vacation_2024.jpg</div>
+          <div class="file-meta"><span>3.2 MB</span><span class="dot-sep"></span><span>14/04/2026</span></div>
+        </div>
+        <div class="file-more">⋯</div>
+      </div>
+      <div class="file-tile" onclick="openFile('img2')" data-cat="images">
+        <div class="file-icon-box" style="color:var(--blue)">🖼️</div>
+        <div class="file-info">
+          <div class="file-name">family_photo.png</div>
+          <div class="file-meta"><span>1.8 MB</span><span class="dot-sep"></span><span>12/04/2026</span></div>
+        </div>
+        <div class="file-more">⋯</div>
+      </div>
+      <div class="file-tile" onclick="openFile('vid1')" data-cat="videos">
+        <div class="file-icon-box" style="color:var(--orange)">🎬</div>
+        <div class="file-info">
+          <div class="file-name">birthday_video.mp4</div>
+          <div class="file-meta"><span>45.6 MB</span><span class="dot-sep"></span><span>10/04/2026</span></div>
+        </div>
+        <div class="file-more">⋯</div>
+      </div>
+      <div class="file-tile" onclick="openFile('doc1')" data-cat="documents">
+        <div class="file-icon-box" style="color:var(--green)">📄</div>
+        <div class="file-info">
+          <div class="file-name">passport_scan.pdf</div>
+          <div class="file-meta"><span>892 KB</span><span class="dot-sep"></span><span>08/04/2026</span></div>
+        </div>
+        <div class="file-more">⋯</div>
+      </div>
+      <div class="file-tile" onclick="openFile('doc2')" data-cat="documents">
+        <div class="file-icon-box" style="color:var(--green)">📋</div>
+        <div class="file-info">
+          <div class="file-name">חוזה_שכירות.pdf</div>
+          <div class="file-meta"><span>2.1 MB</span><span class="dot-sep"></span><span>05/04/2026</span></div>
+        </div>
+        <div class="file-more">⋯</div>
+      </div>
+    </div>
+
+    <button class="fab" onclick="showSnack('📂 בחירת קבצים...')">
+      <span style="font-size:20px">＋</span> הוסף קבצים
+    </button>
+  </div>
+
+  <!-- ══ SCREEN 4: Settings ════════════════════════════════════════ -->
+  <div id="screen-settings" class="screen">
+    <div class="appbar">
+      <div class="appbar-title">
+        <button class="icon-btn" onclick="goBack()" style="margin-left:0">←</button>
+        <span>הגדרות</span>
+      </div>
+    </div>
+
+    <div class="settings-section-title">אבטחה</div>
+    <div class="settings-list">
+      <div class="setting-tile">
+        <div class="setting-icon-box">👆</div>
+        <div class="setting-info">
+          <div class="setting-title">כניסה ביומטרית</div>
+          <div class="setting-sub">Face ID / טביעת אצבע</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="setting-tile">
+        <div class="setting-icon-box">⏱️</div>
+        <div class="setting-info">
+          <div class="setting-title">נעילה אוטומטית</div>
+          <div class="setting-sub">כיום: 2 דקות</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+      <div class="setting-tile" onclick="showSnack('🔑 שינוי קוד PIN')">
+        <div class="setting-icon-box">🔑</div>
+        <div class="setting-info">
+          <div class="setting-title">שינוי קוד PIN</div>
+          <div class="setting-sub">עדכן את קוד ה-PIN שלך</div>
+        </div>
+        <div class="chevron">›</div>
+      </div>
+    </div>
+
+    <div class="settings-section-title" style="margin-top:8px">אחסון</div>
+    <div class="settings-list">
+      <div class="setting-tile">
+        <div class="setting-icon-box">💾</div>
+        <div class="setting-info">
+          <div class="setting-title">נפח מנוצל</div>
+          <div class="setting-sub">5 קבצים · 53.6 MB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section-title" style="margin-top:8px;color:var(--error)">סכנה</div>
+    <div class="settings-list" style="margin-bottom:40px">
+      <div class="setting-tile danger" onclick="showSnack('⚠️ פעולה בלתי הפיכה')">
+        <div class="setting-icon-box" style="color:var(--error)">🗑️</div>
+        <div class="setting-info">
+          <div class="setting-title">איפוס מלא</div>
+          <div class="setting-sub">מחיקת כל הקבצים ואיפוס ה-PIN</div>
+        </div>
+        <div class="chevron" style="color:var(--error)">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 5: File Viewer ═════════════════════════════════════ -->
+  <div id="screen-viewer" class="screen">
+    <div class="viewer-appbar">
+      <button class="icon-btn" onclick="goBack()">←</button>
+      <span id="viewer-name" style="font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+    <div id="viewer-content" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"></div>
+  </div>
+
+</div>
+
+<!-- Snackbar -->
+<div id="snackbar"></div>
+
+<!-- Lock overlay (shown when app goes background) -->
+<div id="lock-overlay">
+  <div style="width:72px;height:72px;background:linear-gradient(135deg,#D4AF37,#B8860B);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px">🔒</div>
+  <div style="font-size:22px;font-weight:700">תיקייה נעולה</div>
+  <div style="color:var(--gold);font-size:14px">מוגן</div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+let pinEntered  = '';
+let currentFile = null;
+let screenStack = [];
+
+// ── Navigation ────────────────────────────────────────────────────
+function goTo(id) {
+  const current = document.querySelector('.screen.active');
+  if (current && current.id !== id) {
+    screenStack.push(current.id);
+    current.classList.add('exit');
+    setTimeout(() => current.classList.remove('active','exit'), 350);
+  }
+  const next = document.getElementById(id);
+  requestAnimationFrame(() => {
+    next.classList.add('active');
+  });
+}
+
+function goBack() {
+  if (screenStack.length === 0) return;
+  const prev = screenStack.pop();
+  const current = document.querySelector('.screen.active');
+  if (current) {
+    current.style.transform = 'translateX(-30px)';
+    current.style.opacity   = '0';
+    setTimeout(() => {
+      current.style.transform = '';
+      current.style.opacity   = '';
+      current.classList.remove('active');
+    }, 300);
+  }
+  goTo(prev);
+  screenStack.pop(); // remove the one we just navigated from
+}
+
+// ── Splash → Auth ─────────────────────────────────────────────────
+setTimeout(() => { goTo('screen-auth'); }, 2200);
+
+// ── PIN Logic ─────────────────────────────────────────────────────
+function pressKey(digit) {
+  if (pinEntered.length >= 6) return;
+  pinEntered += digit;
+  updateDots();
+  if (pinEntered.length === 6) {
+    setTimeout(() => handlePinComplete(), 120);
+  }
+}
+
+function pressDelete() {
+  if (pinEntered.length === 0) return;
+  pinEntered = pinEntered.slice(0, -1);
+  updateDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updateDots() {
+  for (let i = 0; i < 6; i++) {
+    const dot = document.getElementById('d' + i);
+    dot.classList.toggle('filled', i < pinEntered.length);
+  }
+}
+
+function handlePinComplete() {
+  // Demo: PIN 123456 is correct, anything else shows error
+  if (pinEntered === '123456') {
+    goTo('screen-vault');
+    pinEntered = '';
+    updateDots();
+    document.getElementById('pin-error').textContent = '';
+  } else {
+    shakeAndClear('קוד PIN שגוי. נסה 1-2-3-4-5-6');
+  }
+}
+
+function shakeAndClear(msg) {
+  const dots = document.getElementById('pin-dots');
+  dots.style.animation = 'none';
+  dots.style.transition = 'none';
+  // Shake effect
+  let shakes = 0;
+  const interval = setInterval(() => {
+    dots.style.transform = shakes % 2 === 0 ? 'translateX(8px)' : 'translateX(-8px)';
+    shakes++;
+    if (shakes > 5) {
+      clearInterval(interval);
+      dots.style.transform = '';
+      dots.style.transition = '';
+    }
+  }, 55);
+  document.getElementById('pin-error').textContent = msg;
+  pinEntered = '';
+  setTimeout(updateDots, 350);
+}
+
+function loginBiometric() {
+  document.getElementById('pin-error').textContent = '';
+  showSnack('✅ Face ID מאמת...');
+  setTimeout(() => { goTo('screen-vault'); }, 900);
+}
+
+// ── Category filter ───────────────────────────────────────────────
+function filterCat(cat, el) {
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const tiles = document.querySelectorAll('.file-tile');
+  let count = 0;
+  tiles.forEach(t => {
+    const show = cat === 'all' || t.dataset.cat === cat;
+    t.style.display = show ? 'flex' : 'none';
+    if (show) count++;
+  });
+  document.getElementById('file-count').textContent = count + ' קבצים';
+}
+
+// ── File viewer ───────────────────────────────────────────────────
+const fileData = {
+  img1: { name: 'vacation_2024.jpg', type: 'image', emoji: '🏖️' },
+  img2: { name: 'family_photo.png',  type: 'image', emoji: '👨‍👩‍👧' },
+  vid1: { name: 'birthday_video.mp4', type: 'video', emoji: '🎂' },
+  doc1: { name: 'passport_scan.pdf', type: 'doc',   emoji: '📄' },
+  doc2: { name: 'חוזה_שכירות.pdf',   type: 'doc',   emoji: '📋' },
+};
+
+function openFile(id) {
+  const f = fileData[id];
+  document.getElementById('viewer-name').textContent = f.name;
+
+  const content = document.getElementById('viewer-content');
+  if (f.type === 'image') {
+    content.innerHTML = `
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:120px;margin-bottom:20px;opacity:0.85">${f.emoji}</div>
+        <div style="color:var(--text2);font-size:13px">תמונה מוצפנת – מוצגת לאחר פענוח AES-256</div>
+        <div style="margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:right;font-size:12px;color:var(--text3)">
+          🔐 הקובץ הוצפן עם AES-256-CBC<br>
+          ✅ HMAC-SHA256 – שלמות מאומתת<br>
+          🔑 IV אקראי: <code style="color:var(--gold)">a3f1...c9e2</code>
+        </div>
+      </div>`;
+  } else if (f.type === 'video') {
+    content.innerHTML = `
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:100px;margin-bottom:20px">${f.emoji}</div>
+        <div style="color:var(--text2);font-size:13px">סרטון מוצפן</div>
+        <div style="margin-top:20px;background:var(--surfVar);border-radius:50px;padding:14px 28px;display:inline-flex;align-items:center;gap:10px;color:var(--text1);font-size:14px">
+          ▶ ניגון לאחר פענוח
+        </div>
+      </div>`;
+  } else {
+    content.innerHTML = `
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:80px;margin-bottom:16px">${f.emoji}</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">${f.name}</div>
+        <div style="color:var(--text3);font-size:13px">PDF · קובץ מוצפן</div>
+        <div style="margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:right;font-size:12px;color:var(--text3)">
+          🔐 מוצפן עם AES-256-CBC<br>
+          📦 מאוחסן ב: vault_data/${id}.enc
+        </div>
+      </div>`;
+  }
+  goTo('screen-viewer');
+}
+
+// ── Lock vault ────────────────────────────────────────────────────
+function lockVault() {
+  showSnack('🔒 הכספת ננעלה');
+  setTimeout(() => {
+    pinEntered = '';
+    updateDots();
+    document.getElementById('pin-error').textContent = '';
+    screenStack = [];
+    goTo('screen-auth');
+  }, 600);
+}
+
+// ── Snackbar ──────────────────────────────────────────────────────
+let snackTimer;
+function showSnack(msg) {
+  const el = document.getElementById('snackbar');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── Security overlay (background) ────────────────────────────────
+document.addEventListener('visibilitychange', () => {
+  const overlay = document.getElementById('lock-overlay');
+  if (document.hidden) {
+    overlay.classList.add('show');
+  } else {
+    setTimeout(() => overlay.classList.remove('show'), 300);
+  }
+});
+</script>
+</body>
+</html>
