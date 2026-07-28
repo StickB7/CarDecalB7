@@ -419,9 +419,9 @@
           <circle cx="16.6" cy="7.6" r="1.35" fill="#155bf5"/>
         </svg>
       </span>
-      <span>תשלום מיידי בביט — 50 ₪</span>
+      <span>העתקת מספר לתשלום בביט — 50 ₪</span>
     </a>
-    <p class="hint">הכפתור מנסה לפתוח את אפליקציית Bit עם הסכום מוכן מראש. אם לא נפתח אוטומטית, פתחו את Bit ידנית ושלחו לפי המספר שלמעלה.</p>
+    <p class="hint">לחצו להעתקת מספר ה-Bit. לאחר מכן פתחו את אפליקציית Bit ושלחו 50 ₪ למספר שהועתק.</p>
 
     <div style="margin-top:16px;">
       <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px;">צילום מסך של אישור התשלום <span class="opt">(לא חובה)</span></label>
@@ -460,22 +460,16 @@
 
   document.getElementById('bitNum').textContent = BIT_NUMBER;
 
-  // direct "buy now" attempt: tries to open the Bit app pre-filled with the phone + amount.
-  // Bit's deep-link scheme isn't officially published, so this is a best-effort attempt with a graceful fallback.
-  document.getElementById('bitBtn').addEventListener('click', (e) => {
+  // Bit does not provide a reliable public link for opening a personal payment
+  // with the phone number and amount already filled in. Copy the number instead.
+  document.getElementById('bitBtn').addEventListener('click', async (e) => {
     e.preventDefault();
-    const deepLink = `bituponline://pay?phone=${BIT_NUMBER_CLEAN}&sum=${AMOUNT}`;
-    const fallback = "https://www.bitpay.co.il/";
-    let didHide = false;
-    const onBlur = () => { didHide = true; };
-    window.addEventListener('blur', onBlur, { once: true });
-    window.location.href = deepLink;
-    setTimeout(() => {
-      window.removeEventListener('blur', onBlur);
-      if (!didHide) {
-        window.open(fallback, '_blank');
-      }
-    }, 900);
+    try {
+      await navigator.clipboard.writeText(BIT_NUMBER);
+      alert(`מספר ה-Bit ${BIT_NUMBER} הועתק.\n\nפתחו את אפליקציית Bit ושלחו ${AMOUNT} ₪ למספר שהועתק.`);
+    } catch (error) {
+      alert(`פתחו את אפליקציית Bit ושלחו ${AMOUNT} ₪ למספר ${BIT_NUMBER}.`);
+    }
   });
 
   // copy bit number
